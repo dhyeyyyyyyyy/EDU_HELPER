@@ -1,5 +1,7 @@
 package com.example.eduhelper;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -23,20 +25,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.navigation.NavigationView;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -46,6 +43,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private Toolbar toolbar;
+
+    private void showAdminDetailsDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_admin_details, null);
+
+        // References
+        EditText gmailEditText = dialogView.findViewById(R.id.gmailText);
+        View copyBtn = dialogView.findViewById(R.id.copyButton);
+        View telegramLink = dialogView.findViewById(R.id.telegramLink);
+
+        gmailEditText.setText("dhyeyp254@gmail.com");
+
+        // Copy to clipboard
+        copyBtn.setOnClickListener(v -> {
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText("email", gmailEditText.getText().toString());
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(this, "Copied to clipboard!", Toast.LENGTH_SHORT).show();
+        });
+
+        // Telegram link click
+        telegramLink.setOnClickListener(v -> {
+            String url = "https://t.me/dhyeye";
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(url));
+            startActivity(intent);
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle("Admin Contact")
+                .setView(dialogView)
+                .setPositiveButton("Close", null)
+                .show();
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,16 +90,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return insets;
         });
 
-        // Setup Toolbar
+        // Toolbar setup
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Setup DrawerLayout and NavigationView
+        // Drawer setup
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.navigation_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // Setup ActionBarDrawerToggle (hamburger)
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar,
                 R.string.navigation_drawer_open,
@@ -77,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        // Setup RecyclerView
+        // RecyclerView setup
         recyclerView = findViewById(R.id.classRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         classList = new ArrayList<>();
@@ -100,8 +130,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String notesLink = obj.optString("notesUrl", "");
                             String qpLink = obj.optString("questionsUrl", "");
                             String videoLink = obj.optString("videoUrl", "");
+                            String extrasLink = obj.optString("extrasUrl", "");
 
-                            classList.add(new ClassItem(className, notesLink, qpLink, videoLink));
+
+                            classList.add(new ClassItem(className, notesLink, qpLink, videoLink, extrasLink));
                         } catch (Exception e) {
                             Log.e("JSON_PARSE_ERROR", "Error parsing JSON at index " + i, e);
                         }
@@ -142,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void sendToSheet(String name, String contact) {
-        String url = "https://api.sheetbest.com/sheets/a5b08e9f-6482-46b4-ad1e-d855af1765bc";
+        String url = "https://api.sheetbest.com/sheets/290ba29e-69fd-46e3-b713-40ad8c899acf";
 
         JSONObject body = new JSONObject();
         try {
@@ -150,18 +182,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             body.put("contact", contact);
         } catch (Exception e) {
             e.printStackTrace();
+            Toast.makeText(this, "JSON creation error", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
-                response -> Toast.makeText(this, "Meeting stored in Sheet!", Toast.LENGTH_SHORT).show(),
-                error -> Toast.makeText(this, "Failed to store in Sheet", Toast.LENGTH_SHORT).show()
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    Log.d("SHEET_SUCCESS", "Response: " + response);
+                    Toast.makeText(this, "Meeting stored in Sheet!", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Log.e("SHEET_ERROR", "Error posting to Sheet: " + error.toString());
+                    Toast.makeText(this, "Sheet may still be updated. Please verify.", Toast.LENGTH_LONG).show();
+                }
         ) {
             @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Content-Type", "application/json");
-                return headers;
+            public byte[] getBody() throws AuthFailureError {
+                return body.toString().getBytes();
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json";
             }
         };
 
@@ -192,13 +234,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (id == R.id.nav_teachers) {
             Toast.makeText(this, "Teachers list coming soon!", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_book_meeting) {
-            showMeetingDialog(null);
+
+        } else if (id == R.id.nav_make_app) {
+            showAdminDetailsDialog();
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
+
 
     @Override
     public void onBackPressed() {

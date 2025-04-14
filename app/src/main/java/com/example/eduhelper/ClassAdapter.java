@@ -41,6 +41,7 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ViewHolder> 
         holder.viewNotes.setOnClickListener(v -> handleLink(item.getNotesLink(), "Notes not available"));
         holder.viewQP.setOnClickListener(v -> handleLink(item.getQuestionPaperLink(), "Question paper not available"));
         holder.viewVideo.setOnClickListener(v -> handleLink(item.getVideoLink(), "Video not available"));
+        holder.viewExtras.setOnClickListener(v -> handleLink(item.getExtrasLink(), "Extras not available"));
     }
 
     private void handleLink(String url, String errorMessage) {
@@ -73,7 +74,7 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView className;
-        Button viewNotes, viewQP, viewVideo;
+        Button viewNotes, viewQP, viewVideo, viewExtras;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -81,6 +82,7 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ViewHolder> 
             viewNotes = itemView.findViewById(R.id.viewNotes);
             viewQP = itemView.findViewById(R.id.viewQP);
             viewVideo = itemView.findViewById(R.id.viewVideo);
+            viewExtras = itemView.findViewById(R.id.viewExtras); // new button for extras
         }
     }
 }
