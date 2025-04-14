@@ -1,8 +1,9 @@
 # 📘 Coaching Institute App (Android)
 
 An Android application designed for Coaching centres to easily share study materials, sample question papers, and animated videos with students — no login required! The app also features an multiple admin control on sheets and a meeting request system with Google Sheets and Telegram integration.
-To modify app for your usage contact Developer - **dhyeyp254@gmail.com**
 ---
+
+- To modify app for your usage contact Developer - **dhyeyp254@gmail.com**
 
 ## 🚀 Features
 
